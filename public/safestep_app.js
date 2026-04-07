@@ -2,7 +2,7 @@
    SafeStep v3.0 — Application & Animation Logic
    ═══════════════════════════════════════════════════════════════ */
 
-const API = 'http://localhost:8000';
+const API = 'https://areostyle-charla-aggregately.ngrok-free.dev';
 
 /* ═══ 1. ANIMATIONS & PARALLAX ═══ */
 document.addEventListener('DOMContentLoaded', () => {
