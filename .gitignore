@@ -1,0 +1,19 @@
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+.expo/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# Database
+*.db
+*.sqlite3
+
+# Git
+.git/

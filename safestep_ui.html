@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SafeStep — AI-Powered Safety Navigation</title>
+  <meta name="description" content="Real-time AI safety navigation with neural network risk assessment, safe routing, and community intelligence."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="safestep_styles.css"/>
+</head>
+<body>
+
+<!-- SVG SPRITE -->
+<div style="display:none">
+  <svg id="svg-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+  <svg id="svg-brain" viewBox="0 0 24 24"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"></path><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"></path></svg>
+  <svg id="svg-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+  <svg id="svg-route" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="19" r="3"></circle><path d="M18 8v3a4 4 0 0 1-4 4h-4a4 4 0 0 0-4 4v3"></path></svg>
+  <svg id="svg-alert" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+  <svg id="svg-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+  <svg id="svg-cross" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+  <svg id="svg-eye" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+  <svg id="svg-message" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+  <svg id="svg-pin" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+  <svg id="svg-map" viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>
+  <svg id="svg-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+  <svg id="svg-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+  <svg id="svg-mail" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+  <svg id="svg-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+  <svg id="svg-camera" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+  <svg id="svg-activity" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+  <svg id="svg-bar-chart" viewBox="0 0 24 24"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="16"></line></svg>
+  <svg id="svg-layers" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+  <svg id="svg-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+  <svg id="svg-zap" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+  <svg id="svg-chevron-down" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+  <svg id="svg-arrow-right" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!--  PARALLAX LANDING PAGE                                         -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="landing-page">
+  <!-- Animated Background -->
+  <canvas id="hero-canvas"></canvas>
+  <div class="parallax-grid"></div>
+
+  <!-- Floating Elements (parallax layers) -->
+  <div class="floating-elements" id="floating-elements">
+    <div class="float-orb orb-1" data-speed="0.03"></div>
+    <div class="float-orb orb-2" data-speed="0.05"></div>
+    <div class="float-orb orb-3" data-speed="0.02"></div>
+    <div class="float-orb orb-4" data-speed="0.04"></div>
+    <div class="float-orb orb-5" data-speed="0.06"></div>
+  </div>
+
+  <!-- Navigation Bar -->
+  <nav class="landing-nav" id="landing-nav">
+    <div class="landing-nav-brand">
+      <div class="brand-icon-wrap">
+        <svg class="icon" style="width:20px;height:20px;color:#fff"><use href="#svg-shield"></use></svg>
+      </div>
+      <span class="brand-text">SafeStep</span>
+      <span class="brand-badge">AI</span>
+    </div>
+    <div class="landing-nav-links">
+      <a href="#features" class="nav-link">Features</a>
+      <a href="#stats" class="nav-link">Statistics</a>
+      <a href="#tech" class="nav-link">Technology</a>
+      <button class="nav-cta" onclick="showLoginModal()">Launch App</button>
+    </div>
+  </nav>
+
+  <!-- ═══ HERO SECTION ═══ -->
+  <section class="hero-section" id="hero">
+    <div class="hero-content" data-speed="0.08">
+      <div class="hero-badge">
+        <svg class="icon" style="width:14px;height:14px"><use href="#svg-zap"></use></svg>
+        <span>Powered by Neural Networks & Real-Time Data</span>
+      </div>
+      <h1 class="hero-title">
+        <span class="title-line">Navigate</span>
+        <span class="title-line gradient-text">Safer.</span>
+        <span class="title-line">Live Smarter.</span>
+      </h1>
+      <p class="hero-desc">
+        AI-powered urban safety intelligence that monitors 8+ environmental factors
+        in real-time. Gradient Boosting neural engine, community-sourced intel,
+        and dynamic route optimization — all in one platform.
+      </p>
+      <div class="hero-actions">
+        <button class="hero-btn primary" onclick="showLoginModal()">
+          <svg class="icon" style="width:18px;height:18px"><use href="#svg-shield"></use></svg>
+          <span>Get Started</span>
+          <svg class="icon" style="width:16px;height:16px"><use href="#svg-arrow-right"></use></svg>
+        </button>
+        <button class="hero-btn secondary" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">
+          <span>Explore Features</span>
+          <svg class="icon" style="width:16px;height:16px"><use href="#svg-chevron-down"></use></svg>
+        </button>
+      </div>
+      <div class="hero-metrics">
+        <div class="hero-metric">
+          <span class="metric-val" data-count="64">0</span>
+          <span class="metric-label">Safety Points</span>
+        </div>
+        <div class="metric-divider"></div>
+        <div class="hero-metric">
+          <span class="metric-val" data-count="8">0</span>
+          <span class="metric-label">AI Features</span>
+        </div>
+        <div class="metric-divider"></div>
+        <div class="hero-metric">
+          <span class="metric-val" data-count="97">0</span>
+          <span class="metric-label">% Accuracy</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-visual" data-speed="0.04">
+      <div class="mockup-phone">
+        <div class="phone-notch"></div>
+        <div class="phone-screen">
+          <div class="mock-map" id="mock-map"></div>
+          <div class="mock-overlay">
+            <div class="mock-score-ring">
+              <svg viewBox="0 0 100 100" class="mock-ring-svg">
+                <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="6"/>
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#00E676" stroke-width="6" stroke-dasharray="251.33" stroke-dashoffset="50.27" stroke-linecap="round" class="mock-ring-progress"/>
+              </svg>
+              <div class="mock-score-text">
+                <span class="mock-val">8.2</span>
+                <span class="mock-lbl">SAFE</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Floating tech badges around the phone -->
+      <div class="tech-badge-float tb-1"><svg class="icon" style="width:14px;height:14px"><use href="#svg-brain"></use></svg> Neural AI</div>
+      <div class="tech-badge-float tb-2"><svg class="icon" style="width:14px;height:14px"><use href="#svg-target"></use></svg> Real-Time</div>
+      <div class="tech-badge-float tb-3"><svg class="icon" style="width:14px;height:14px"><use href="#svg-layers"></use></svg> Multi-Layer</div>
+    </div>
+
+    <div class="scroll-indicator" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">
+      <div class="scroll-mouse">
+        <div class="scroll-dot"></div>
+      </div>
+      <span>Scroll to explore</span>
+    </div>
+  </section>
+
+  <!-- ═══ FEATURES SECTION ═══ -->
+  <section class="features-section" id="features">
+    <div class="section-header" data-reveal>
+      <span class="section-tag">CAPABILITIES</span>
+      <h2 class="section-title">Intelligent Safety<br/><span class="gradient-text">At Every Step</span></h2>
+      <p class="section-desc">Eight environmental factors analyzed simultaneously by our GradientBoosting neural engine.</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card" data-reveal data-delay="0">
+        <div class="feature-icon fi-green">
+          <svg class="icon"><use href="#svg-brain"></use></svg>
+        </div>
+        <h3>AI Safety Engine</h3>
+        <p>GradientBoosting model trained on 64+ data points with 8-dimensional feature space. Real-time IDW interpolation with ML refinement.</p>
+        <div class="feature-stats">
+          <span class="fs-item"><strong>200</strong> estimators</span>
+          <span class="fs-item"><strong>8</strong> features</span>
+        </div>
+      </div>
+      <div class="feature-card" data-reveal data-delay="100">
+        <div class="feature-icon fi-blue">
+          <svg class="icon"><use href="#svg-route"></use></svg>
+        </div>
+        <h3>Safe Route Planning</h3>
+        <p>OSRM-powered routing with per-segment safety analysis. Color-coded risk visualization on real road networks.</p>
+        <div class="feature-stats">
+          <span class="fs-item"><strong>10+</strong> segments</span>
+          <span class="fs-item"><strong>3</strong> modes</span>
+        </div>
+      </div>
+      <div class="feature-card" data-reveal data-delay="200">
+        <div class="feature-icon fi-purple">
+          <svg class="icon"><use href="#svg-target"></use></svg>
+        </div>
+        <h3>Live Area Scanning</h3>
+        <p>Click any location for instant safety assessment. Dynamic scoring adjusts for time-of-day, lighting, police proximity, and crowd density.</p>
+        <div class="feature-stats">
+          <span class="fs-item"><strong>2km</strong> radius</span>
+          <span class="fs-item"><strong>25</strong> max points</span>
+        </div>
+      </div>
+      <div class="feature-card" data-reveal data-delay="300">
+        <div class="feature-icon fi-red">
+          <svg class="icon"><use href="#svg-alert"></use></svg>
+        </div>
+        <h3>SOS Emergency</h3>
+        <p>One-tap distress signal with nearest police station lookup. Automatic emergency contact notification and location sharing.</p>
+        <div class="feature-stats">
+          <span class="fs-item"><strong>18</strong> stations</span>
+          <span class="fs-item"><strong>112</strong> emergency</span>
+        </div>
+      </div>
+      <div class="feature-card" data-reveal data-delay="400">
+        <div class="feature-icon fi-yellow">
+          <svg class="icon"><use href="#svg-sun"></use></svg>
+        </div>
+        <h3>Environmental Factors</h3>
+        <p>Lighting density, CCTV coverage, road quality, crowd density, sentiment analysis — all factored into every prediction.</p>
+        <div class="feature-stats">
+          <span class="fs-item"><strong>8</strong> factors</span>
+          <span class="fs-item"><strong>24/7</strong> monitoring</span>
+        </div>
+      </div>
+      <div class="feature-card" data-reveal data-delay="500">
+        <div class="feature-icon fi-cyan">
+          <svg class="icon"><use href="#svg-message"></use></svg>
+        </div>
+        <h3>Community Intel</h3>
+        <p>Crowdsourced incident reports, social media sentiment, and community safety keywords for real-world context.</p>
+        <div class="feature-stats">
+          <span class="fs-item"><strong>12+</strong> incidents</span>
+          <span class="fs-item"><strong>Live</strong> feeds</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ STATS SECTION ═══ -->
+  <section class="stats-section" id="stats">
+    <div class="stats-bg-glow"></div>
+    <div class="section-header" data-reveal>
+      <span class="section-tag">LIVE INTELLIGENCE</span>
+      <h2 class="section-title">Real-Time Platform<br/><span class="gradient-text">Statistics</span></h2>
+    </div>
+    <div class="stats-dashboard" id="stats-dashboard">
+      <div class="dash-card" data-reveal>
+        <div class="dash-icon di-green"><svg class="icon"><use href="#svg-globe"></use></svg></div>
+        <div class="dash-val" data-count="64">0</div>
+        <div class="dash-label">Safety Data Points</div>
+        <div class="dash-bar"><div class="dash-bar-fill" style="width:0%" data-width="85%"></div></div>
+      </div>
+      <div class="dash-card" data-reveal data-delay="100">
+        <div class="dash-icon di-blue"><svg class="icon"><use href="#svg-brain"></use></svg></div>
+        <div class="dash-val" data-count="200">0</div>
+        <div class="dash-label">ML Estimators</div>
+        <div class="dash-bar"><div class="dash-bar-fill" style="width:0%" data-width="92%"></div></div>
+      </div>
+      <div class="dash-card" data-reveal data-delay="200">
+        <div class="dash-icon di-red"><svg class="icon"><use href="#svg-alert"></use></svg></div>
+        <div class="dash-val" data-count="12">0</div>
+        <div class="dash-label">Active Incidents</div>
+        <div class="dash-bar"><div class="dash-bar-fill" style="width:0%" data-width="35%"></div></div>
+      </div>
+      <div class="dash-card" data-reveal data-delay="300">
+        <div class="dash-icon di-purple"><svg class="icon"><use href="#svg-layers"></use></svg></div>
+        <div class="dash-val" data-count="18">0</div>
+        <div class="dash-label">Police Stations</div>
+        <div class="dash-bar"><div class="dash-bar-fill" style="width:0%" data-width="78%"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ TECH SECTION ═══ -->
+  <section class="tech-section" id="tech">
+    <div class="section-header" data-reveal>
+      <span class="section-tag">ARCHITECTURE</span>
+      <h2 class="section-title">Built With<br/><span class="gradient-text">Modern Stack</span></h2>
+    </div>
+    <div class="tech-grid" data-reveal>
+      <div class="tech-item">
+        <div class="tech-logo">🐍</div>
+        <span>FastAPI</span>
+      </div>
+      <div class="tech-item">
+        <div class="tech-logo">🧠</div>
+        <span>scikit-learn</span>
+      </div>
+      <div class="tech-item">
+        <div class="tech-logo">🗺️</div>
+        <span>Leaflet.js</span>
+      </div>
+      <div class="tech-item">
+        <div class="tech-logo">🗄️</div>
+        <span>SQLite</span>
+      </div>
+      <div class="tech-item">
+        <div class="tech-logo">📊</div>
+        <span>NumPy</span>
+      </div>
+      <div class="tech-item">
+        <div class="tech-logo">🛣️</div>
+        <span>OSRM</span>
+      </div>
+      <div class="tech-item">
+        <div class="tech-logo">🤖</div>
+        <span>GradientBoost</span>
+      </div>
+      <div class="tech-item">
+        <div class="tech-logo">⚡</div>
+        <span>Real-time API</span>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="final-cta" data-reveal>
+      <h2 class="cta-title">Ready to Navigate <span class="gradient-text">Safely?</span></h2>
+      <p class="cta-desc">Experience the future of urban safety intelligence.</p>
+      <button class="hero-btn primary" onclick="showLoginModal()">
+        <svg class="icon" style="width:18px;height:18px"><use href="#svg-shield"></use></svg>
+        <span>Launch SafeStep</span>
+        <svg class="icon" style="width:16px;height:16px"><use href="#svg-arrow-right"></use></svg>
+      </button>
+    </div>
+  </section>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!--  LOGIN MODAL                                                    -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="login-modal" class="modal-overlay">
+  <div class="modal-card">
+    <button class="modal-close" onclick="hideLoginModal()">
+      <svg class="icon" style="width:20px;height:20px"><use href="#svg-cross"></use></svg>
+    </button>
+    <div class="login-header">
+      <div class="login-logo">
+        <div class="logo-ring"></div>
+        <svg class="icon" style="width:28px;height:28px;color:#fff;position:relative;z-index:2"><use href="#svg-shield"></use></svg>
+      </div>
+      <h1 class="login-title">SafeStep</h1>
+      <p class="login-subtitle">AI-Powered Safety Intelligence</p>
+    </div>
+    <div id="login-form">
+      <div class="input-group" id="name-group" style="display:none">
+        <div class="input-icon"><svg class="icon"><use href="#svg-user"></use></svg></div>
+        <input type="text" id="signup-name" placeholder="Full Name" autocomplete="name"/>
+      </div>
+      <div class="input-group">
+        <div class="input-icon"><svg class="icon"><use href="#svg-mail"></use></svg></div>
+        <input type="email" id="login-email" placeholder="Email address" autocomplete="email"/>
+      </div>
+      <div class="input-group">
+        <div class="input-icon"><svg class="icon"><use href="#svg-lock"></use></svg></div>
+        <input type="password" id="login-pass" placeholder="Password" autocomplete="current-password"/>
+      </div>
+      <button class="login-btn" id="auth-btn" onclick="authLogin()">
+        <span id="auth-btn-text">Sign In</span>
+        <svg class="icon" style="width:18px;height:18px"><use href="#svg-shield"></use></svg>
+      </button>
+      <div class="login-toggle" onclick="toggleAuthMode()">
+        <span id="auth-toggle-text">Don't have an account? <strong>Sign Up</strong></span>
+      </div>
+    </div>
+    <div class="login-features">
+      <div class="feature-chip"><svg class="icon" style="width:14px;height:14px"><use href="#svg-target"></use></svg> Live Scanning</div>
+      <div class="feature-chip"><svg class="icon" style="width:14px;height:14px"><use href="#svg-route"></use></svg> Safe Routing</div>
+      <div class="feature-chip"><svg class="icon" style="width:14px;height:14px"><use href="#svg-alert"></use></svg> SOS Alerts</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!--  MAIN APP (hidden initially)                                   -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="app-container" style="display:none">
+  <nav id="main-nav">
+    <div class="nav-brand">
+      <div class="nav-logo"><svg class="icon" style="width:20px;height:20px;color:#fff"><use href="#svg-shield"></use></svg></div>
+      <span class="nav-name">SafeStep</span>
+      <span class="nav-badge">AI v2.0</span>
+    </div>
+    <div class="nav-right">
+      <div class="nav-status-dot"></div>
+      <span class="nav-status-text">NEURAL ENGINE LIVE</span>
+      <button class="nav-stats-btn" onclick="toggleStatsPanel()">
+        <svg class="icon" style="width:16px;height:16px"><use href="#svg-activity"></use></svg>
+      </button>
+    </div>
+  </nav>
+
+  <div class="main">
+    <div id="map-container">
+      <div id="map"></div>
+      <div class="map-hint" id="map-hint">
+        <svg class="icon" style="width:16px;height:16px"><use href="#svg-pin"></use></svg>
+        <span>Click anywhere on the map to scan safety</span>
+      </div>
+      <button id="sos-btn" onclick="triggerSOS()">
+        <span class="sos-pulse-ring"></span>
+        <span class="sos-label">SOS</span>
+        <span class="sos-sub">EMERGENCY</span>
+      </button>
+
+      <!-- Live Stats Panel (toggleable) -->
+      <div class="live-stats-panel" id="live-stats-panel">
+        <div class="lsp-header">
+          <svg class="icon" style="width:14px;height:14px"><use href="#svg-activity"></use></svg>
+          <span>System Dashboard</span>
+        </div>
+        <div class="lsp-grid">
+          <div class="lsp-item"><span class="lsp-val" id="lsp-model">GradientBoosting</span><span class="lsp-label">AI Model</span></div>
+          <div class="lsp-item"><span class="lsp-val" id="lsp-points">64</span><span class="lsp-label">Training Points</span></div>
+          <div class="lsp-item"><span class="lsp-val" id="lsp-features">8</span><span class="lsp-label">Feature Dims</span></div>
+          <div class="lsp-item"><span class="lsp-val" id="lsp-status">●  Live</span><span class="lsp-label">Engine Status</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DRAWER -->
+    <div class="drawer" id="drawer">
+      <div class="drawer-tabs">
+        <button class="dtab active" onclick="switchTab('analyze')"><svg class="icon"><use href="#svg-target"></use></svg><span>Scan</span></button>
+        <button class="dtab" onclick="switchTab('navigate')"><svg class="icon"><use href="#svg-route"></use></svg><span>Route</span></button>
+        <button class="dtab" onclick="switchTab('report')"><svg class="icon"><use href="#svg-alert"></use></svg><span>Report</span></button>
+      </div>
+
+      <!-- TAB: ANALYZE -->
+      <div class="tab-panel active" id="tab-analyze">
+        <div class="coord-bar">
+          <svg class="icon" style="width:14px;height:14px;color:var(--accent)"><use href="#svg-pin"></use></svg>
+          <span id="coord-display">Tap map to begin</span>
+        </div>
+
+        <div class="score-card glass" id="score-card">
+          <div class="score-row">
+            <div class="score-ring-wrap">
+              <svg class="ring" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="7"/>
+                <circle id="ring-arc" cx="50" cy="50" r="42" fill="none" stroke="var(--accent)" stroke-width="7" stroke-dasharray="263.89" stroke-dashoffset="263.89" stroke-linecap="round" style="transition:stroke-dashoffset 1.2s cubic-bezier(.16,1,.3,1),stroke .5s"/>
+              </svg>
+              <div class="score-center">
+                <span class="score-val" id="score-val">—</span>
+                <span class="score-lbl">SAFETY</span>
+              </div>
+            </div>
+            <div class="score-info">
+              <div class="risk-badge" id="risk-badge">AWAITING</div>
+              <p class="score-msg" id="score-msg">Click on the map to analyze any location's safety profile.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="stats-grid" id="stat-row" style="display:none">
+          <div class="stat-card"><div class="stat-val" id="stat-pts">—</div><div class="stat-label">Data Points</div></div>
+          <div class="stat-card"><div class="stat-val" id="stat-conf">—</div><div class="stat-label">Confidence</div></div>
+          <div class="stat-card"><div class="stat-val" id="stat-inc">—</div><div class="stat-label">Incidents</div></div>
+        </div>
+
+        <div class="stats-grid" id="env-row" style="display:none">
+          <div class="stat-card glow-yellow"><div class="stat-val" id="stat-light">—</div><div class="stat-label">Lighting</div></div>
+          <div class="stat-card glow-blue"><div class="stat-val" id="stat-police">—</div><div class="stat-label">Police</div></div>
+          <div class="stat-card glow-red"><div class="stat-val" id="stat-cctv">—</div><div class="stat-label">CCTV</div></div>
+        </div>
+
+        <!-- Extra environment row -->
+        <div class="stats-grid" id="env-row-2" style="display:none">
+          <div class="stat-card"><div class="stat-val" id="stat-road">—</div><div class="stat-label">Road Quality</div></div>
+          <div class="stat-card"><div class="stat-val" id="stat-crowd">—</div><div class="stat-label">Crowd</div></div>
+          <div class="stat-card"><div class="stat-val" id="stat-ert">—</div><div class="stat-label">Response</div></div>
+        </div>
+
+        <div id="intel-section" style="display:none">
+          <div class="section-label"><svg class="icon" style="width:12px;height:12px"><use href="#svg-message"></use></svg> Community Intel</div>
+          <div class="intel-card glass">
+            <img id="intel-img" class="intel-image" src="" alt="Area"/>
+            <div class="intel-tags" id="intel-tags"></div>
+            <div id="intel-posts"></div>
+          </div>
+        </div>
+
+        <div id="incidents-section" style="display:none">
+          <div class="section-label"><svg class="icon" style="width:12px;height:12px"><use href="#svg-alert"></use></svg> Nearby Incidents</div>
+          <div id="incidents-list"></div>
+        </div>
+
+        <div class="empty-state" id="empty-analyze">
+          <svg class="icon" style="width:40px;height:40px;opacity:.3"><use href="#svg-target"></use></svg>
+          <p>Neural engine ready. Tap the map to scan.</p>
+        </div>
+      </div>
+
+      <!-- TAB: NAVIGATE -->
+      <div class="tab-panel" id="tab-navigate">
+        <div class="route-form glass">
+          <div class="route-input-wrap" style="position:relative;z-index:2000">
+            <label class="rlabel" style="color:var(--accent)">⬤ Origin</label>
+            <input type="text" class="rinput" id="nav-origin-input" placeholder="Starting point..." autocomplete="off" onkeyup="searchLocation(this.value,'origin')" onfocus="searchLocation(this.value,'origin')"/>
+            <div id="origin-suggestions" class="suggestions-box hide"></div>
+          </div>
+          <div class="route-divider"></div>
+          <div class="route-input-wrap" style="position:relative;z-index:1000">
+            <label class="rlabel" style="color:#FF9100">⬤ Destination</label>
+            <input type="text" class="rinput" id="nav-dest-input" placeholder="Where to?" autocomplete="off" onkeyup="searchLocation(this.value,'dest')" onfocus="searchLocation(this.value,'dest')"/>
+            <div id="dest-suggestions" class="suggestions-box hide"></div>
+          </div>
+          <div class="route-actions">
+            <button class="btn-compute" onclick="calculateRoute()"><svg class="icon" style="width:16px;height:16px"><use href="#svg-route"></use></svg> Compute Safe Route</button>
+            <button class="btn-clear" onclick="clearNavigation()">Clear</button>
+          </div>
+        </div>
+
+        <div id="route-stats" style="display:none">
+          <div class="section-label"><svg class="icon" style="width:12px;height:12px"><use href="#svg-map"></use></svg> Route Analysis</div>
+          <div class="stats-grid">
+            <div class="stat-card"><div class="stat-val" id="r-stat-score">—</div><div class="stat-label">Safety</div></div>
+            <div class="stat-card"><div class="stat-val" id="r-stat-dist">—</div><div class="stat-label">Distance</div></div>
+            <div class="stat-card"><div class="stat-val" id="r-stat-time">—</div><div class="stat-label">ETA</div></div>
+          </div>
+          <div class="route-msg glass" id="route-msg">Route analyzed.</div>
+          <div id="route-segments-list"></div>
+        </div>
+      </div>
+
+      <!-- TAB: REPORT -->
+      <div class="tab-panel" id="tab-report">
+        <div class="report-form glass">
+          <label class="rlabel">Incident Type</label>
+          <select class="rinput" id="rep-type">
+            <option value="">Select type...</option>
+            <option value="assault">Assault / Violence</option>
+            <option value="theft">Theft / Robbery</option>
+            <option value="harassment">Harassment</option>
+            <option value="poor_lighting">Poor Lighting</option>
+            <option value="suspicious_activity">Suspicious Activity</option>
+            <option value="other">Other</option>
+          </select>
+          <label class="rlabel">Severity (1-10)</label>
+          <input type="range" class="severity-slider" id="rep-severity" min="1" max="10" value="5"/>
+          <div class="severity-display">Severity: <strong id="severity-val">5</strong>/10</div>
+          <label class="rlabel">Description</label>
+          <textarea class="rinput report-desc" id="rep-desc" placeholder="Describe what happened..." rows="3"></textarea>
+          <div class="coord-bar" style="margin-top:8px">
+            <svg class="icon" style="width:12px;height:12px"><use href="#svg-pin"></use></svg>
+            <span id="rep-coord">Click map first</span>
+          </div>
+          <button class="btn-sos-report" onclick="submitReport()"><svg class="icon" style="width:16px;height:16px"><use href="#svg-alert"></use></svg> Submit Report</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"><svg class="icon" id="toast-icon"><use href="#svg-check"></use></svg><span id="toast-msg"></span></div>
+
+<script src="safestep_app.js"></script>
+</body>
+</html>
