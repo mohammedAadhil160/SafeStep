@@ -3,6 +3,7 @@
    ═══════════════════════════════════════════════════════════════ */
 
 const API = 'https://sweet-flowers-thank.loca.lt';
+const HEADERS = { 'Content-Type': 'application/json', 'bypass-tunnel-reminder': 'true', 'ngrok-skip-browser-warning': 'true' };
 
 /* ═══ 1. ANIMATIONS & PARALLAX ═══ */
 document.addEventListener('DOMContentLoaded', () => {
@@ -175,7 +176,7 @@ map.on('click', async (e) => {
 
   try {
     const res = await fetch(`${API}/analyze`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json', 'Bypass-Tunnel-Reminder': 'true' },
+      method: 'POST', headers: HEADERS,
       body: JSON.stringify({ lat, lng, radius_m: 2000 }),
     });
     const data = await res.json();
@@ -398,7 +399,7 @@ async function calculateRoute() {
       if (!chunk.length) return null;
       const mid = chunk[Math.floor(chunk.length / 2)];
       const aRes = await fetch(`${API}/analyze`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: HEADERS,
         body: JSON.stringify({ lat: mid[0], lng: mid[1], radius_m: 2000 })
       });
       return { chunk, data: await aRes.json() };
