@@ -2,8 +2,8 @@
    SafeStep v3.0 — Application & Animation Logic
    ═══════════════════════════════════════════════════════════════ */
 
-const API = 'https://sweet-flowers-thank.loca.lt';
-const HEADERS = { 'Content-Type': 'application/json', 'bypass-tunnel-reminder': 'true', 'ngrok-skip-browser-warning': 'true' };
+const API = 'http://localhost:8000';
+const HEADERS = { 'Content-Type': 'application/json' };
 
 /* ═══ 1. ANIMATIONS & PARALLAX ═══ */
 document.addEventListener('DOMContentLoaded', () => {
