@@ -2,7 +2,7 @@
    SafeStep v3.0 — Application & Animation Logic
    ═══════════════════════════════════════════════════════════════ */
 
-const API = 'https://areostyle-charla-aggregately.ngrok-free.dev';
+const API = 'https://sweet-flowers-thank.loca.lt';
 
 /* ═══ 1. ANIMATIONS & PARALLAX ═══ */
 document.addEventListener('DOMContentLoaded', () => {
@@ -175,7 +175,7 @@ map.on('click', async (e) => {
 
   try {
     const res = await fetch(`${API}/analyze`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Bypass-Tunnel-Reminder': 'true' },
       body: JSON.stringify({ lat, lng, radius_m: 2000 }),
     });
     const data = await res.json();
